@@ -41,18 +41,19 @@ function booleanGameMainFunction() {
     timeAndScoreView.timerInterval;
 
     timeAndScoreView.rightScore = 0;
-    timeAndScoreView.increaseRightScore() {
+    timeAndScoreView.increaseRightScore = function() {
         this.rightScore++;
         document.getElementById("right_score").innerHTML = "Right: " + this.rightScore;
     }
 
     timeAndScoreView.wrongScore = 0;
-    timeAndScoreView.increaseWrongScore() {
+    timeAndScoreView.increaseWrongScore = function() {
         this.wrongScore++;
         document.getElementById("wrong_score").innerHTML = "Wrong: " + this.wrongScore;
     }
 
-	var g_nextButton = document.getElementById("next_button")
+	var g_nextButton = document.getElementById("next_button");
+	var g_display = document.getElementById("display");
 
 	var STATES = {NO_GAME: 0, INFO: 1, QUESTION: 2};
 	var state = STATES.NO_GAME;
@@ -70,6 +71,7 @@ function booleanGameMainFunction() {
 	
 	var NUMBER_OF_VARIABLES = 3;
 	var variables = generateVars(NUMBER_OF_VARIABLES);
+	var curVariable = variables[0];
 	
 	var step = -1;
 	function nextStep(){
@@ -79,14 +81,23 @@ function booleanGameMainFunction() {
 		} else {
 			setState(STATES.QUESTION);
 		}
+		var curVariableIndex = step % NUMBER_OF_VARIABLES;
+		curVariable = variables[curVariableIndex];
 	}
 	
 	function nextLine(){
-		
+		nextStep();
+		var result;
+		if(getState() == STATES.INFO){
+			result = curVariable.name + " = true AND false";
+		} else if (getState() == STATES.QUESTION){
+			result = curVariable.name + " = ?";
+		}
+		return result;
 	}
 	
 	g_nextButton.onclick = function(){
-		
+		g_display.innerHTML = nextLine();
 	}
 }
 
