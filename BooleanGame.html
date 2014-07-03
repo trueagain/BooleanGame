@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Boolean Game</title>
+        <style>
+            #left_div {
+                display: inline-block;
+                float: left;
+            }
+            #right_div {
+                display: inline-block;
+                float: left;
+                padding-left: 5px;
+            }
+            #main_div {
+                display: inline-block;
+                float: left;
+            }
+            #right_score {
+                color: green;
+            }
+            #wrong_score {
+                color: red;
+            }
+            #answer_input {
+                height: 20px;
+            }
+            #next_button {
+				width: 100px;
+				height: 60px;
+				font-size: 120%;
+            }
+        </style>
+    </head>
+    <body>
+
+        <div id="fg_div">
+            <p id="timer">
+                Time: 0s
+            </p>
+            <p>
+                <span id="right_score"> Right: 0 </span>
+                &nbsp;&nbsp;&nbsp;
+                <span id="wrong_score"> Wrong: 0 </span>
+            </p>
+            <div id="left_div">
+                <p>
+                    <code id="code">
+                        ...
+                    </code>
+                </p>
+                <p>
+                    <input id="answer_input"/>
+                </p>
+                <p id="answer_result" ></p>
+            </div>
+            <div id="right_div">
+                <p>
+                    <button id="next_button">
+                        New Game
+                    </button>
+                </p>
+            </div>
+        </div>
+        <script src="booleangame.js"></script>
+    </body>
