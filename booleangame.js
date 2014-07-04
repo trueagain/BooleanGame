@@ -29,126 +29,145 @@ function generateVars(n) {
     return result;
 }
 
-function booleanGameMainFunction() {
-
-    var timeAndScoreView = {};
-    timeAndScoreView.time = 0;
-    timeAndScoreView.timeTickFunc = function() {
-        this.time++;
-        document.getElementById("timer").innerHTML = "Time: " + this.time + "s";
+function createView() {
+    var vView = {};
+    vView.showScore = function(s) {
+        document.getElementById("score").innerHTML = s;
     }
-    timeAndScoreView.timerInterval
-
-    timeAndScoreView.rightScore = 0;
-    timeAndScoreView.increaseRightScore = function() {
-        this.rightScore++;
-        document.getElementById("right_score").innerHTML = "Right: " + this.rightScore;
+    vView.showGain = function(g) {
+        document.getElementById("gain").innerHTML = g;
     }
-
-    timeAndScoreView.wrongScore = 0;
-    timeAndScoreView.increaseWrongScore = function() {
-        this.wrongScore++;
-        document.getElementById("wrong_score").innerHTML = "Wrong: " + this.wrongScore;
+    vView.showLives = function(l) {
+        document.getElementById("lives").innerHTML = l;
     }
-    var g_nextButton = document.getElementById("next_button");
-    var g_display = document.getElementById("display");
-    var g_answerInput = document.getElementById("answer_input");
-    var g_answerResult = document.getElementById("answer_result");
+    vView.showLastAnswerRight = function() {
+        document.getElementById("last_answer").innerHTML = "Right";
+    }
+    vView.showLastAnswerWrong = function() {
+        document.getElementById("last_answer").innerHTML = "Wrong";
+    }
+    vView.showOnDisplay = function(d) {
+        document.getElementById("display").innerHTML = d;
+    }
+    vView.changeNextFalseButtonName = function(n) {
+        document.getElementById("next_false_button").innerHTML = n;
+    }
+    vView.hideNextFalseButton = function() {
+        document.getElementById("next_false_button").style.visibility = "hidden";
+    }
+    vView.showNextFalseButton = function() {
+        document.getElementById("next_false_button").style.visibility = "visible";
+    }
+    vView.hideTrueButton = function() {
+        document.getElementById("true_button").style.visibility = "hidden";
+    }
+    vView.showTrueButton = function() {
+        document.getElementById("true_button").style.visibility = "visible";
+    }
+    vView.activateNoGame = function() {
+        this.hideTrueButton();
+        this.changeNextFalseButtonName("New Game");
+    }
+    vView.activateNext = function() {
+        this.hideTrueButton();
+        this.changeNextFalseButtonName("Next");
+    }
+    vView.activateFalseTrue = function() {
+        this.showTrueButton();
+        this.changeNextFalseButtonName("False");
+    }
+    vView.getFalseNextButton = function() {
+        return document.getElementById("next_false_button");
+    }
+    vView.getTrueButton = function() {
+        return document.getElementById("true_button");
+    }
+    return result;
+}
 
-    var STATES = {
-        NO_GAME : 0,
+function createQuestionsGenerator(varNum) {
+    var qGenerator = {};
+    qGenerator.VAR_NUM = varNum;
+    qGenerator.vars = generateVars(qGenerator.VAR_NUM);
+    qGenerator.QSTATES = {
+        INACTIVE : 0,
         INIT : 1,
         UPDATE : 2,
         QUESTION : 3
     };
-    var state = STATES.NO_GAME;
-    var prevState = STATES.NO_GAME;
-    function getState() {
-        return state;
-    }
-
-    function getPrevState() {
-        return prevState;
-    }
-
-    function setState(s) {
-        prevState = state;
-        state = s;
-        if (state == STATES.NO_GAME) {
-            g_nextButton.innerHTML = "New Game";
-        } else {
-            g_nextButton.innerHTML = "Next";
-        }
-    }
-
-    var NUMBER_OF_VARIABLES = 3;
-    var variables = generateVars(NUMBER_OF_VARIABLES);
-    var curVariable = variables[0];
-    var prevQuestionAnswer;
-
-    var step = (-1 * NUMBER_OF_VARIABLES) - 1;
-    function nextStep() {
-        step++;
-        if (step < 0) {
-            setState(STATES.INIT);
-            curVariable = variables[step + NUMBER_OF_VARIABLES];
-        } else {
-            if ((step % (2 * NUMBER_OF_VARIABLES)) < 3) {
-                setState(STATES.UPDATE);
-            } else {
-                setState(STATES.QUESTION);
-            }
-            var curVariableIndex = step % NUMBER_OF_VARIABLES;
-            curVariable = variables[curVariableIndex];
-        }
-    }
-
-    function checkAnswer() {
-    	console.log("g_answerInput.value: " + g_answerInput.value + " prevQuestionAnswer: " + prevQuestionAnswer);
-		if(g_answerInput.value == (prevQuestionAnswer + "")){
-			g_answerResult.innerHTML = "Right";
-			timeAndScoreView.increaseRightScore();
-		} else {
-			g_answerResult.innerHTML = "Wrong";
-			timeAndScoreView.increaseWrongScore();
-		}
-    }
-
-    function nextLine() {
-        nextStep();
-        if (getPrevState() == STATES.QUESTION) {
-            checkAnswer();
-        } else {
-        	g_answerResult.innerHTML = "";
-        }
-        var result;
-        if (getState() == STATES.INIT) {
+    qGenerator.qState = qGenerator.QSTATES.INACTIVE;
+    qGenerator.step = (-1 * varNum) - 1;
+    qGenerator.next = function() {
+        var result = {};
+        this.step++;
+        var curVar;
+        if (this.step < 0) {
+        	curVar = this.vars[this.step + this.VAR_NUM];
             var rBool = randomBoolean();
-            result = curVariable.name + " = " + rBool;
-            curVariable.value = rBool;
-        } else if (getState() == STATES.UPDATE) {
-            var rBool = randomBoolean();
-            var rOp;
-            if (randomBoolean()) {
-                rOp = "OR";
-                curVariable.value = curVariable.value || rBool;
+            curVar.value = rBool;
+            result.qState = this.QSTATES.INIT;
+            result.toDisplay = curVar.name + " = " + rBool;
+        } else {
+        	var curVarIndex = this.step % this.VAR_NUM;
+            curVar = this.vars[curVariableIndex];
+            if ((this.step % (2 * this.VAR_NUM)) < this.VAR_NUM) {
+                var rBool = randomBoolean();
+                var rOp;
+                if (randomBoolean()) {
+                    rOp = "OR";
+                    curVar.value = curVar.value || rBool;
+                } else {
+                    rOp = "AND";
+                    curVar.value = curVar.value && rBool;
+                }
+                result.qState = this.QSTATES.UPDATE;
+                result.toDisplay = curVar.name + " = " + curVar.name + " " + rOp + " " + rBool;
             } else {
-                rOp = "AND";
-                curVariable.value = curVariable.value && rBool;
+                result.qState = this.QSTATES.QUESTION;
+                result.toDisplay = curVar.name + " = ?";
+                result.answer = curVar.value;
             }
-            result = curVariable.name + " = " + curVariable.name + " " + rOp + " " + rBool;
-        } else if (getState() == STATES.QUESTION) {
-            result = curVariable.name + " = ?";
-            prevQuestionAnswer = curVariable.value;
         }
-        console.log(curVariable.name + " = " + curVariable.value);
         return result;
     }
+}
 
-
-    g_nextButton.onclick = function() {
-        g_display.innerHTML = nextLine();
+function createEngine(eView, eGenerator) {
+    var eEngine = {};
+    eEngine.score = 0;
+    eEngine.INITIAL_NUMBER_OF_LIVES = 3;
+    eEngine.lives = eEngine.INITIAL_NUMBER_OF_LIVES;
+    engine.init = function(){
+    	eView.getFalseNextButton().onclick = function(){
+    			
+    	}
+    	eView.getTrueButton().onclick = function(){
+    			
+    	}
     }
+    engine.start = function(){
+    	
+    	var prevAnswer;
+    	var prevQState;
+    	while(this.lives > 0){
+    		
+    		
+    		if(prevQState == q.QSTATES.QUESTION){
+    			
+    		}
+    		var q = eGenerator.next();
+    		
+    	}
+    	eView.activateNoGame();
+    	eView.showOnDisplay("Game over");
+    	
+    }
+    return eEngine;
+}
+
+function booleanGameMainFunction() {
+    var view = createView();
+    view.activateFalseTrue();
 }
 
 window.onload = booleanGameMainFunction;

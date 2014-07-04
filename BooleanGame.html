@@ -3,64 +3,50 @@
     <head>
         <title>Boolean Game</title>
         <style>
-            #left_div {
-                display: inline-block;
-                float: left;
+            #display {
+                display: table-cell;
+                width: 200px;
+                height: 60px;
+                text-align: center;
+                vertical-align: middle;
             }
-            #right_div {
-                display: inline-block;
-                float: left;
-                padding-left: 5px;
+            #next_false_button {
+                width: 100px;
+                height: 60px;
+                font-size: 120%;
             }
-            #main_div {
-                display: inline-block;
-                float: left;
-            }
-            #right_score {
-                color: green;
-            }
-            #wrong_score {
-                color: red;
-            }
-            #answer_input {
-                height: 20px;
-            }
-            #next_button {
-				width: 100px;
-				height: 60px;
-				font-size: 120%;
+            #true_button {
+                width: 100px;
+                height: 60px;
+                font-size: 120%;
+                visibility: hidden;
             }
         </style>
     </head>
     <body>
-
-        <div id="fg_div">
-            <p id="timer">
-                Time: 0s
-            </p>
-            <p>
-                <span id="right_score"> Right: 0 </span>
-                &nbsp;&nbsp;&nbsp;
-                <span id="wrong_score"> Wrong: 0 </span>
-            </p>
-            <div id="left_div">
-                <p>
-                    <code id="display">
-                        ...
-                    </code>
-                </p>
-                <p>
-                    <input id="answer_input"/>
-                </p>
-                <p id="answer_result" ></p>
+        <div>
+            <span>Score:</span>
+            <span id="score">0</span>
+            <br>
+            <span>Gain:</span>
+            <span id="gain">0</span>
+            <br>
+            <span>Lives:</span>
+            <span id="lives">0</span>
+            <br>
+            <span>Last answer:</span>
+            <span id="last_answer"></span>
+            <br>
+            <div id="display">
+                ...
             </div>
-            <div id="right_div">
-                <p>
-                    <button id="next_button">
-                        New Game
-                    </button>
-                </p>
-            </div>
+            <br>
+            <button id="next_false_button">
+                Start
+            </button>
+            <button id="true_button">
+                True
+            </button>
         </div>
         <script src="booleangame.js"></script>
     </body>
