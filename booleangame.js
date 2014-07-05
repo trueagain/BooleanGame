@@ -96,15 +96,40 @@ function createQuestionsGenerator(varNum) {
         INACTIVE : 0,
         INIT : 1,
         UPDATE : 2,
-        QUESTION : 3
+        QUESTION : 3,
+        OVER : 4
     };
-    qGenerator.qState = qGenerator.QSTATES.INACTIVE;
     qGenerator.step = (-1 * varNum) - 1;
+    qGenerator.getQState = function(s) {
+    	if (s < 0){
+    		return this.QSTATES.INIT;
+    	}
+    	if (s < this.VAR_NUM) {
+    		return this.QSTATES.UPDATE;
+    	}
+    	if (s < this.VAR_NUM * 2) {
+    		return this.QSTATES.QUESTION;
+    	}
+    	if (s < this.VAR_NUM * 4) {
+    		return this.QSTATES.UPDATE;
+    	}
+    	if (s < this.VAR_NUM * 5) {
+    		return this.QSTATES.QUESTION;
+    	}
+    	if (s < this.VAR_NUM * 8) {
+    		return this.QSTATES.UPDATE;
+    	}
+    	if (s < this.VAR_NUM * 9) {
+    		return this.QSTATES.QUESTION;
+    	}
+    	return this.QSTATES.OVER;
+    }
     qGenerator.next = function() {
         var result = {};
         this.step++;
+        result.qState = this.getQState(this.step);
         var curVar;
-        if (this.step < 0) {
+        if (result.qState == this.QSTATES.INIT) {
         	curVar = this.vars[this.step + this.VAR_NUM];
             var rBool = randomBoolean();
             curVar.value = rBool;
@@ -113,7 +138,7 @@ function createQuestionsGenerator(varNum) {
         } else {
         	var curVarIndex = this.step % this.VAR_NUM;
             curVar = this.vars[curVarIndex];
-            if ((this.step % (2 * this.VAR_NUM)) < this.VAR_NUM) {
+            if (result.qState == this.QSTATES.UPDATE) {
                 var rBool = randomBoolean();
                 var rOp;
                 if (randomBoolean()) {
@@ -125,7 +150,7 @@ function createQuestionsGenerator(varNum) {
                 }
                 result.qState = this.QSTATES.UPDATE;
                 result.toDisplay = curVar.name + " = " + curVar.name + " " + rOp + " " + rBool;
-            } else {
+            } else if (result.qState == this.QSTATES.QUESTION){
                 result.qState = this.QSTATES.QUESTION;
                 result.toDisplay = curVar.name + " = ?";
                 result.answer = curVar.value;
@@ -136,9 +161,11 @@ function createQuestionsGenerator(varNum) {
     return qGenerator;
 }
 
-function createEngine(eView, eGenerator) {
+function createEngine(eView, eVarNum) {
     var eEngine = {};
     eEngine.score = 0;
+    eEngine.varNum = eVarNum;
+    eEngine.generator = createQuestionsGenerator(eEngine.varNum);
     eEngine.changeScore = function(delta){
     	this.score += delta;
     	eView.showScore(this.score);
@@ -149,11 +176,17 @@ function createEngine(eView, eGenerator) {
     	this.lives += delta;
     	eView.showLives(this.lives);
     }
-    eEngine.prevQState == eGenerator.QSTATES.INACTIVE;
+    eEngine.prevQState == eEngine.generator.QSTATES.INACTIVE;
     eEngine.prevAnswer;
     eEngine.onButton = function(userAnswer) {
-    	var generatedQuestion = eGenerator.next();
-    	if(this.prevQState == eGenerator.QSTATES.QUESTION){
+    	var generatedQuestion = this.generator.next();
+    	if(generatedQuestion.qState == this.generator.QSTATES.OVER){
+    		this.varNum++;
+			this.generator = createQuestionsGenerator(this.varNum);
+			this.onButton(userAnswer);
+			return;
+    	}
+    	if(this.prevQState == this.generator.QSTATES.QUESTION){
     		if(userAnswer == this.prevAnswer){
     			this.changeScore(1);
     			eView.showLastAnswerRight();
@@ -164,11 +197,11 @@ function createEngine(eView, eGenerator) {
 		} else {
 			eView.clearLastAnswer();
 		}
-		if(generatedQuestion.qState == eGenerator.QSTATES.INIT){
+		if(generatedQuestion.qState == this.generator.QSTATES.INIT){
 			eView.activateNext();
-		} else if(generatedQuestion.qState == eGenerator.QSTATES.UPDATE){
+		} else if(generatedQuestion.qState == this.generator.QSTATES.UPDATE){
 			eView.activateNext();
-		} else if(generatedQuestion.qState == eGenerator.QSTATES.QUESTION){
+		} else if(generatedQuestion.qState == this.generator.QSTATES.QUESTION){
 			eView.activateFalseTrue();
 		}
 		eView.showOnDisplay(generatedQuestion.toDisplay);
@@ -188,8 +221,7 @@ function createEngine(eView, eGenerator) {
 
 function booleanGameMainFunction() {
     var view = createView();
-    var generator = createQuestionsGenerator(2);
-    var engine = createEngine(view, generator);
+    var engine = createEngine(view, 2);
     engine.init();
 }
 
