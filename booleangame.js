@@ -46,6 +46,9 @@ function createView() {
     vView.showLastAnswerWrong = function() {
         document.getElementById("last_answer").innerHTML = "Wrong";
     }
+    vView.clearLastAnswer = function() {
+        document.getElementById("last_answer").innerHTML = "";
+    }
     vView.showOnDisplay = function(d) {
         document.getElementById("display").innerHTML = d;
     }
@@ -82,7 +85,7 @@ function createView() {
     vView.getTrueButton = function() {
         return document.getElementById("true_button");
     }
-    return result;
+    return vView;
 }
 
 function createQuestionsGenerator(varNum) {
@@ -109,7 +112,7 @@ function createQuestionsGenerator(varNum) {
             result.toDisplay = curVar.name + " = " + rBool;
         } else {
         	var curVarIndex = this.step % this.VAR_NUM;
-            curVar = this.vars[curVariableIndex];
+            curVar = this.vars[curVarIndex];
             if ((this.step % (2 * this.VAR_NUM)) < this.VAR_NUM) {
                 var rBool = randomBoolean();
                 var rOp;
@@ -130,44 +133,64 @@ function createQuestionsGenerator(varNum) {
         }
         return result;
     }
+    return qGenerator;
 }
 
 function createEngine(eView, eGenerator) {
     var eEngine = {};
     eEngine.score = 0;
+    eEngine.changeScore = function(delta){
+    	this.score += delta;
+    	eView.showScore(this.score);
+    }
     eEngine.INITIAL_NUMBER_OF_LIVES = 3;
     eEngine.lives = eEngine.INITIAL_NUMBER_OF_LIVES;
-    engine.init = function(){
+    eEngine.changeLives = function(delta){
+    	this.lives += delta;
+    	eView.showLives(this.lives);
+    }
+    eEngine.prevQState == eGenerator.QSTATES.INACTIVE;
+    eEngine.prevAnswer;
+    eEngine.onButton = function(userAnswer) {
+    	var generatedQuestion = eGenerator.next();
+    	if(this.prevQState == eGenerator.QSTATES.QUESTION){
+    		if(userAnswer == this.prevAnswer){
+    			this.changeScore(1);
+    			eView.showLastAnswerRight();
+    		} else {
+    			this.changeLives(-1);
+    			eView.showLastAnswerWrong();
+    		}	
+		} else {
+			eView.clearLastAnswer();
+		}
+		if(generatedQuestion.qState == eGenerator.QSTATES.INIT){
+			eView.activateNext();
+		} else if(generatedQuestion.qState == eGenerator.QSTATES.UPDATE){
+			eView.activateNext();
+		} else if(generatedQuestion.qState == eGenerator.QSTATES.QUESTION){
+			eView.activateFalseTrue();
+		}
+		eView.showOnDisplay(generatedQuestion.toDisplay);
+		this.prevQState = generatedQuestion.qState;
+		this.prevAnswer = generatedQuestion.answer;
+    }
+    eEngine.init = function(){
     	eView.getFalseNextButton().onclick = function(){
-    			
+    		eEngine.onButton(false);
     	}
     	eView.getTrueButton().onclick = function(){
-    			
+    		eEngine.onButton(true);
     	}
-    }
-    engine.start = function(){
-    	
-    	var prevAnswer;
-    	var prevQState;
-    	while(this.lives > 0){
-    		
-    		
-    		if(prevQState == q.QSTATES.QUESTION){
-    			
-    		}
-    		var q = eGenerator.next();
-    		
-    	}
-    	eView.activateNoGame();
-    	eView.showOnDisplay("Game over");
-    	
     }
     return eEngine;
 }
 
 function booleanGameMainFunction() {
     var view = createView();
-    view.activateFalseTrue();
+    var generator = createQuestionsGenerator(2);
+    var engine = createEngine(view, generator);
+    engine.init();
 }
 
 window.onload = booleanGameMainFunction;
