@@ -164,14 +164,15 @@ function createQuestionsGenerator(varNum) {
     return qGenerator;
 }
 
-function playSound(s){
-	var audio = new Audio(s + ".mp3");
-	audio.play();
+function playSound(s) {
+    var audio = new Audio(s + ".mp3");
+    audio.play();
 }
 
 function createEngine(eView, eStartVarNum) {
     var eEngine = {};
     eEngine.score = 0;
+    eEngine.gain = 0;
     eEngine.view = eView;
     eEngine.startVarNum = eStartVarNum;
     eEngine.varNum = eStartVarNum;
@@ -188,6 +189,24 @@ function createEngine(eView, eStartVarNum) {
         this.score = newValue;
         this.view.showScore(this.score);
     }
+    eEngine.setGain = function(newValue) {
+        this.gain = newValue;
+        this.view.showGain(this.gain);
+    }
+    eEngine.gainCountFuncInterval = null;
+    eEngine.clearGainCountFuncInterval = function() {
+    	if(this.gainCountFuncInterval != null){
+    		window.clearInterval(this.gainCountFuncInterval);
+    	}
+    }
+    eEngine.resetGainCount = function(startValue, decreaseRate){
+    	this.clearGainCountFuncInterval();
+    	this.setGain(startValue);
+    	var gainCountFunc = function(){
+    		eEngine.setGain(Math.floor(eEngine.gain * decreaseRate));
+    	}
+    	this.gainCountFuncInterval = window.setInterval(gainCountFunc, 1000);
+    }
     eEngine.INITIAL_NUMBER_OF_LIVES = 3;
     eEngine.lives = eEngine.INITIAL_NUMBER_OF_LIVES;
     eEngine.changeLives = function(delta) {
@@ -198,41 +217,47 @@ function createEngine(eView, eStartVarNum) {
         this.lives = newValue;
         this.view.showLives(this.lives);
     }
-    eEngine.prevQState == eEngine.generator.QSTATES.INACTIVE;
-    eEngine.prevAnswer
+    eEngine.prevQState = eEngine.generator.QSTATES.INACTIVE;
+    eEngine.prevAnswer = null;
     eEngine.onButton = function(userAnswer) {
         var generatedQuestion = this.generator.next();
+        console.log("generatedQuestion.toDisplay = " + generatedQuestion.toDisplay + " generatedQuestion.qState = " + generatedQuestion.qState);
         if (generatedQuestion.qState == this.generator.QSTATES.OVER) {
-        	playSound("nextlevel");
+            playSound("nextlevel");
             this.changeVarNum(1);
             this.generator = createQuestionsGenerator(this.varNum);
             this.onButton(userAnswer);
             return;
         }
+        if ((generatedQuestion.qState == this.generator.QSTATES.INIT) || (generatedQuestion.qState == this.generator.QSTATES.UPDATE)) {
+        	if((this.prevQState == this.generator.QSTATES.QUESTION) || (this.prevQState == this.generator.QSTATES.INACTIVE)){
+        		this.resetGainCount(100, 0.8);
+        	}
+        }
         if (this.prevQState == this.generator.QSTATES.QUESTION) {
             if (userAnswer == this.prevAnswer) {
-            	playSound("correct");
-                this.changeScore(1);
+                playSound("correct");
+                this.changeScore(this.gain);
                 this.view.showLastAnswerRight();
             } else {
                 this.changeLives(-1);
                 this.view.showLastAnswerWrong();
                 if (this.lives < 1) {
-                	playSound("gameover");
+                    playSound("gameover");
                     this.view.activateNoGame();
                     this.view.showOnDisplay("GAME OVER");
                     this.prevQState = this.generator.QSTATES.INACTIVE;
                     return;
                 } else {
-                	playSound("wrong");
+                    playSound("wrong");
                 }
             }
+            
         } else {
-        	playSound("selection");
             this.view.clearLastAnswer();
-            if (this.prevQState == this.generator.QSTATES.INACTIVE) {
-	            this.restart();
-	        }
+            if (this.prevQState == this.generator.QSTATES.OVER) {
+                this.restart();
+            }
         }
         if (generatedQuestion.qState == this.generator.QSTATES.INIT) {
             this.view.activateNext();
