@@ -164,6 +164,11 @@ function createQuestionsGenerator(varNum) {
     return qGenerator;
 }
 
+function playSound(s){
+	var audio = new Audio(s + ".mp3");
+	audio.play();
+}
+
 function createEngine(eView, eStartVarNum) {
     var eEngine = {};
     eEngine.score = 0;
@@ -198,30 +203,32 @@ function createEngine(eView, eStartVarNum) {
     eEngine.onButton = function(userAnswer) {
         var generatedQuestion = this.generator.next();
         if (generatedQuestion.qState == this.generator.QSTATES.OVER) {
-            this.varNum++;
+        	playSound("nextlevel");
+            this.changeVarNum(1);
             this.generator = createQuestionsGenerator(this.varNum);
             this.onButton(userAnswer);
             return;
         }
         if (this.prevQState == this.generator.QSTATES.QUESTION) {
             if (userAnswer == this.prevAnswer) {
-            	var correctAudio = new Audio('correct.mp3');
-			    correctAudio.play();
+            	playSound("correct");
                 this.changeScore(1);
                 this.view.showLastAnswerRight();
             } else {
-            	var wrongAudio = new Audio('wrong.mp3');
-			    wrongAudio.play();
                 this.changeLives(-1);
                 this.view.showLastAnswerWrong();
                 if (this.lives < 1) {
+                	playSound("gameover");
                     this.view.activateNoGame();
                     this.view.showOnDisplay("GAME OVER");
                     this.prevQState = this.generator.QSTATES.INACTIVE;
                     return;
+                } else {
+                	playSound("wrong");
                 }
             }
         } else {
+        	playSound("selection");
             this.view.clearLastAnswer();
             if (this.prevQState == this.generator.QSTATES.INACTIVE) {
 	            this.restart();
