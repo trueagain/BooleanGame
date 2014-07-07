@@ -1,3 +1,17 @@
+function randomElement(a){
+	var r = Math.random() * a.length;
+	for(var i = 0; i < a.length; i++){
+		if(r < (i + 1)){
+			return a[i];
+		}
+	}
+	return a[0];
+}
+
+function randomNaturalNumberLessThan(n){
+	return Math.floor(Math.random() * n);
+}
+
 function toNDigitsString(t, n){
 	var result = t + "";
 	while(result.length < n){
@@ -61,10 +75,10 @@ function createView() {
         document.getElementById("level").innerHTML = l;
     }
     vView.showLastAnswerRight = function() {
-        document.getElementById("last_answer").innerHTML = "Right";
+        document.getElementById("last_answer").innerHTML = "Correct";
     }
     vView.showLastAnswerWrong = function() {
-        document.getElementById("last_answer").innerHTML = "Wrong";
+        document.getElementById("last_answer").innerHTML = "Incorrect";
     }
     vView.clearLastAnswer = function() {
         document.getElementById("last_answer").innerHTML = "";
@@ -174,15 +188,30 @@ function createQuestionsGenerator(varNum) {
             if (result.qState == this.QSTATES.UPDATE) {
                 var rBool = randomBoolean();
                 var rOp;
-                if (randomBoolean()) {
-                    rOp = "OR";
-                    curVar.value = curVar.value || rBool;
+                var randVar = randomElement(this.vars)
+                var randType = randomNaturalNumberLessThan(3);
+                if(randType == 0) {
+                	rOp = "OR";
+                    curVar.value = randVar.value || rBool;
+                    if(randomBoolean()) {
+                    	result.toDisplay = curVar.name + " = " + randVar.name + " " + rOp + " " + rBool;
+                    } else {
+                    	result.toDisplay = curVar.name + " = " + rBool + " " + rOp + " " + randVar.name;
+                    }
+                } else if (randType == 1) {
+                	rOp = "AND";
+                    curVar.value = randVar.value && rBool;
+                    if(randomBoolean()) {
+                    	result.toDisplay = curVar.name + " = " + randVar.name + " " + rOp + " " + rBool;
+                    } else {
+                    	result.toDisplay = curVar.name + " = " + rBool + " " + rOp + " " + randVar.name;
+                    }
                 } else {
-                    rOp = "AND";
-                    curVar.value = curVar.value && rBool;
+                	rOp = "NOT";
+                	curVar.value = !randVar.value;
+                	result.toDisplay = curVar.name + " = NOT " + randVar.name;
                 }
                 result.qState = this.QSTATES.UPDATE;
-                result.toDisplay = curVar.name + " = " + curVar.name + " " + rOp + " " + rBool;
             } else if (result.qState == this.QSTATES.QUESTION) {
                 result.qState = this.QSTATES.QUESTION;
                 result.toDisplay = curVar.name + " = ?";
