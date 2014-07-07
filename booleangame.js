@@ -1,3 +1,20 @@
+function toNDigitsString(t, n){
+	var result = t + "";
+	while(result.length < n){
+		result = "0" + result;
+	}
+	return result;
+}
+
+function log(message){
+	var date = new Date();
+    var timeToDisplay = toNDigitsString(date.getHours(), 2) + ":" + 
+    toNDigitsString(date.getMinutes(), 2) + ":" + 
+    toNDigitsString(date.getSeconds(), 2) + "." + 
+    toNDigitsString(date.getMilliseconds(), 3) + " | ";
+	console.log(timeToDisplay + message);
+}
+
 function randomBoolean() {
     var r = Math.random();
     if (r > 0.5) {
@@ -231,7 +248,10 @@ function createEngine(eView, eStartVarNum) {
         }
         if ((generatedQuestion.qState == this.generator.QSTATES.INIT) || (generatedQuestion.qState == this.generator.QSTATES.UPDATE)) {
         	if((this.prevQState == this.generator.QSTATES.QUESTION) || (this.prevQState == this.generator.QSTATES.INACTIVE)){
-        		this.resetGainCount(100, 0.8);
+        		var startGain = 100;
+        		var decreaseRatio = 0.9;
+        		log("reset gain to " + startGain + " with decrease ratio " + decreaseRatio);
+        		this.resetGainCount(startGain, decreaseRatio);
         	}
         }
         if (this.prevQState == this.generator.QSTATES.QUESTION) {
