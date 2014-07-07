@@ -144,10 +144,23 @@ function createQuestionsGenerator(varNum) {
         }
         return this.QSTATES.OVER;
     }
+    qGenerator.getUpdateCount = function(s) {
+    	if (s < this.VAR_NUM * 2) {
+            return 1;
+        }
+        if (s < this.VAR_NUM * 5) {
+            return 2;
+        }
+        if (s < this.VAR_NUM * 9) {
+            return 3;
+        }
+        return 0;
+    }
     qGenerator.next = function() {
         var result = {};
         this.step++;
         result.qState = this.getQState(this.step);
+        result.updateCount = this.getUpdateCount(this.step);
         var curVar;
         if (result.qState == this.QSTATES.INIT) {
             curVar = this.vars[this.step + this.VAR_NUM];
@@ -197,6 +210,10 @@ function createEngine(eView, eStartVarNum) {
         this.varNum++;
         this.view.showLevel(this.varNum);
     }
+    eEngine.setVarNum = function(newValue) {
+    	this.varNum = newValue;
+    	this.view.showLevel(this.varNum);
+    }
     eEngine.generator = createQuestionsGenerator(eEngine.varNum);
     eEngine.changeScore = function(delta) {
         this.score += delta;
@@ -211,13 +228,14 @@ function createEngine(eView, eStartVarNum) {
         this.view.showGain(this.gain);
     }
     eEngine.gainCountFuncInterval = null;
-    eEngine.clearGainCountFuncInterval = function() {
+    eEngine.clearGainCount = function() {
+    	this.setGain(0);
     	if(this.gainCountFuncInterval != null){
     		window.clearInterval(this.gainCountFuncInterval);
     	}
     }
     eEngine.resetGainCount = function(startValue, decreaseRate){
-    	this.clearGainCountFuncInterval();
+    	this.clearGainCount();
     	this.setGain(startValue);
     	var gainCountFunc = function(){
     		eEngine.setGain(Math.floor(eEngine.gain * decreaseRate));
@@ -237,33 +255,36 @@ function createEngine(eView, eStartVarNum) {
     eEngine.prevQState = eEngine.generator.QSTATES.INACTIVE;
     eEngine.prevAnswer = null;
     eEngine.onButton = function(userAnswer) {
+    	if(this.prevQState == this.generator.QSTATES.INACTIVE){
+            log("reset")
+            this.reset();
+    	}
         var generatedQuestion = this.generator.next();
-        console.log("generatedQuestion.toDisplay = " + generatedQuestion.toDisplay + " generatedQuestion.qState = " + generatedQuestion.qState);
+        log("generated question: qstate: " + generatedQuestion.qState + ", toDisplay: "
+         + generatedQuestion.toDisplay + ", answer: " + generatedQuestion.answer
+         + ", updateCount: " + generatedQuestion.updateCount);
         if (generatedQuestion.qState == this.generator.QSTATES.OVER) {
             playSound("nextlevel");
+            log("creating next level");
             this.changeVarNum(1);
             this.generator = createQuestionsGenerator(this.varNum);
             this.onButton(userAnswer);
             return;
         }
-        if ((generatedQuestion.qState == this.generator.QSTATES.INIT) || (generatedQuestion.qState == this.generator.QSTATES.UPDATE)) {
-        	if((this.prevQState == this.generator.QSTATES.QUESTION) || (this.prevQState == this.generator.QSTATES.INACTIVE)){
-        		var startGain = 100;
-        		var decreaseRatio = 0.9;
-        		log("reset gain to " + startGain + " with decrease ratio " + decreaseRatio);
-        		this.resetGainCount(startGain, decreaseRatio);
-        	}
-        }
         if (this.prevQState == this.generator.QSTATES.QUESTION) {
             if (userAnswer == this.prevAnswer) {
+            	log("correct answer");
                 playSound("correct");
                 this.changeScore(this.gain);
                 this.view.showLastAnswerRight();
             } else {
+            	log("wrong answer");
                 this.changeLives(-1);
                 this.view.showLastAnswerWrong();
                 if (this.lives < 1) {
                     playSound("gameover");
+                    log("game over");
+                    this.clearGainCount();
                     this.view.activateNoGame();
                     this.view.showOnDisplay("GAME OVER");
                     this.prevQState = this.generator.QSTATES.INACTIVE;
@@ -274,10 +295,16 @@ function createEngine(eView, eStartVarNum) {
             }
             
         } else {
+        	log("clean last answer");
             this.view.clearLastAnswer();
-            if (this.prevQState == this.generator.QSTATES.OVER) {
-                this.restart();
-            }
+        }
+        if ((generatedQuestion.qState == this.generator.QSTATES.INIT) || (generatedQuestion.qState == this.generator.QSTATES.UPDATE)) {
+        	if((this.prevQState == this.generator.QSTATES.QUESTION) || (this.prevQState == this.generator.QSTATES.INACTIVE)){
+        		var startGain = generatedQuestion.updateCount * 100 * this.varNum;
+        		var decreaseRatio = 0.9;
+        		log("reset gain to " + startGain + " with decrease ratio " + decreaseRatio);
+        		this.resetGainCount(startGain, decreaseRatio);
+        	}
         }
         if (generatedQuestion.qState == this.generator.QSTATES.INIT) {
             this.view.activateNext();
@@ -290,8 +317,8 @@ function createEngine(eView, eStartVarNum) {
         this.prevQState = generatedQuestion.qState;
         this.prevAnswer = generatedQuestion.answer;
     }
-    eEngine.restart = function() {
-        this.varNum = this.startVarNum;
+    eEngine.reset = function() {
+        this.setVarNum(this.startVarNum);
         this.generator = createQuestionsGenerator(this.varNum);
         this.setLives(this.INITIAL_NUMBER_OF_LIVES);
         this.setScore(0);
