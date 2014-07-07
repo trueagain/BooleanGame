@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Boolean Game</title>
+        <style>
+            #display {
+                display: table-cell;
+                width: 200px;
+                height: 60px;
+                text-align: center;
+                vertical-align: middle;
+            }
+            #next_false_button {
+                width: 100px;
+                height: 60px;
+                font-size: 120%;
+            }
+            #true_button {
+                width: 100px;
+                height: 60px;
+                font-size: 120%;
+                visibility: hidden;
+            }
+        </style>
+         <link rel="stylesheet" href="qunit-1.14.0.css">
+    </head>
+    <body>
+        <div id="qunit"></div>
+        <div id="qunit-fixture"></div>
+        <script src="../booleangame.js"></script>
+        <script src="qunit-1.14.0.js"></script>
+        <script src="tests.js"></script>
+        <div>
+            <span>Score:</span>
+            <span id="score">0</span>
+            <br>
+            <span>Gain:</span>
+            <span id="gain">0</span>
+            <br>
+            <span>Level:</span>
+            <span id="level">2</span>
+            <br>
+            <span>Lives:</span>
+            <span id="lives">3</span>
+            <br>
+            <span>Last answer:</span>
+            <span id="last_answer"></span>
+            <br>
+            <div id="display">
+                ...
+            </div>
+            <br>
+            <button id="next_false_button">
+                Start
+            </button>
+            <button id="true_button">
+                True
+            </button>
+        </div>
+    </body>
