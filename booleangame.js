@@ -76,9 +76,11 @@ function createView() {
     }
     vView.showLastAnswerRight = function() {
         document.getElementById("last_answer").innerHTML = "Correct";
+        document.getElementById("last_answer").style.color = "green";
     }
     vView.showLastAnswerWrong = function() {
         document.getElementById("last_answer").innerHTML = "Incorrect";
+        document.getElementById("last_answer").style.color = "red";
     }
     vView.clearLastAnswer = function() {
         document.getElementById("last_answer").innerHTML = "";
@@ -330,7 +332,7 @@ function createEngine(eView, eStartVarNum) {
         if ((generatedQuestion.qState == this.generator.QSTATES.INIT) || (generatedQuestion.qState == this.generator.QSTATES.UPDATE)) {
         	if((this.prevQState == this.generator.QSTATES.QUESTION) || (this.prevQState == this.generator.QSTATES.INACTIVE)){
         		var startGain = generatedQuestion.updateCount * 100 * this.varNum;
-        		var decreaseRatio = 0.9;
+        		var decreaseRatio = 0.93;
         		log("reset gain to " + startGain + " with decrease ratio " + decreaseRatio);
         		this.resetGainCount(startGain, decreaseRatio);
         	}
